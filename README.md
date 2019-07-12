@@ -30,5 +30,5 @@ This project is open sourced and does not have a license for use. Enjoy!
 
 # TODOS
 
- - [ ] Add quanlity selection
+ - [ ] Add quality selection
  - [ ] Add Audio or video Only
