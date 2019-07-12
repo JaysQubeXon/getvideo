@@ -1,4 +1,4 @@
-import React, { Component, SyntheticEvent } from 'react';
+import React, { SyntheticEvent, useState, useEffect } from 'react';
 import logo from './logo.svg';
 import Axios from "axios";
 import './App.css';
@@ -19,135 +19,190 @@ type State = {
   video: boolean;
 };
 
-class App extends Component<Props, State> {
-  state: State = {
-    videoID: "",
-    error: "",
-    folderName: "",
-    nameError: "",
-    video: false,
-  }
-
-  componentDidMount() {
-    const folderName = localStorage.getItem("getvideo-foldername");
-    if (!!folderName) {
-      this.setState({ folderName });
+function GetVideo() {
+  const [videoID, setVideoID] = useState("");
+  const [error, setError] = useState({ code: "", message: "" });
+  const [folderName, setFolderName] = useState("");
+  const [hasVideo, setHasVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  useEffect(() => {
+    const storageFolderName = localStorage.getItem("getvideo-foldername");
+    if (!storageFolderName) {
+      setError({ code: "no-folder-name", message: "Please provide a folder for download" });
+    } else {
+      setFolderName(storageFolderName);
     }
+
+    return function cleanup() { }
+  }, [videoID, error, folderName, hasVideo]);
+
+  if (error.code.length > 0 && error.message === "no-folder-name") {
+    setError({ code: "initial", message: "Please provide a download folder url so app can work" });
   }
 
-  public handleChange = (event: SyntheticEvent) => {
+  function resetError() {
+    setTimeout(() => setError({ code: "", message: "" }), 10000);
+  }
+
+  const handleChange = (event: SyntheticEvent) => {
     event.preventDefault();
     event.persist();
     let videoID = (event.target as HTMLInputElement).value;
-    console.log((event.target as HTMLInputElement).value);
-
-    this.setState({ videoID });
+    setVideoID(videoID);
   }
 
-  public handlenNameChange = (event: SyntheticEvent) => {
+  const handlenNameChange = (event: SyntheticEvent) => {
     event.preventDefault();
     event.persist();
-    let folderName = (event.target as HTMLInputElement).value;
-    this.setState(
-      { folderName, error: folderName.length > 0 ? "" : "Folder Name is required!" },
-      () => localStorage.setItem("getvideo-foldername", folderName)
-    );
-  }
-
-  public onEnter = (e: any) => {
-    if (this.state.folderName.length < 1) {
-      this.setState({ error: "Please Specify a folder name for output!" }, this.timeout)
+    let folderNameInput = (event.target as HTMLInputElement).value;
+    if (!folderNameInput) {
+      setError({ code: "folder-name-missing", message: "Please provide a folder for downloading content." });
+      resetError();
       return;
     }
-    this.setState({ error: "" });
+    setFolderName(folderNameInput);
+    localStorage.setItem("getvideo-foldername", folderNameInput);
+  }
+
+  const openFolder = () => {
+    Axios.post("http://localhost:1717/openFolder", { folderName });
+  }
+
+  const onEnter = (e: any) => {
     if (e.charCode === 13) {
-      console.log("what:", e)
-      if (this.state.videoID.length < 0) {
-        this.setState({ error: "Please provide a video URL" })
+      if (videoID.length < 0) {
+        setError({ code: "submit-on-enter-invalid-video-id", message: "Please provide a video URL" });
+        resetError();
         return;
       }
-      Axios.post("http://localhost:1717/download",
-        {
-          videoURL: this.state.videoID,
-          folderName: this.state.folderName.length > 0 ? this.state.folderName : "",
-          error: "",
-        })
-        .then((s) => {
-          console.log(s);
-          if (s.data.success) {
-            this.setState({
-              video: s.data.success,
-              error: "Check your Downloads folder"
-            });
-            if (this.state.folderName.length > 0) {
-              Axios.post("http://localhost:1717/openFolder",
-                { folderName: this.state.folderName });
-            } else {
-              this.setState({ error: "Can't open folder, no folder specified!" },
-                this.timeout
-              );
-            }
-          }
-        })
-        .catch((error) =>
-          this.setState(
-            { error: "No Network or Server is Disconnected" },
-            this.timeout
-          )
-        );
+      download();
     }
   }
 
-  timeout = () => setTimeout(
-    () => this.state.error.length > 0 && this.setState({ error: "" }),
-    10000);
+  const download = () => {
+    if (error.code) setError({ code: "", message: "" });
+    if (!folderName) {
+      setError({ code: "submit-on-enter", message: "Please Specify a folder name for output!" });
+      resetError();
+      return;
+    }
 
-  public render() {
+    setIsDownloading(true);
+    Axios.post("http://localhost:1717/download",
+      {
+        videoURL: videoID,
+        folderName,
+        error: "",
+      })
+      .then(({ data: { data } }) => {
+        console.log(data);
+        if (data.success) {
+          setError({ code: "success", message: "Check your Downloads folder" });
+          setHasVideo(data.success);
 
-    return (
-      <div className="App">
-        <header className="App-header">
-          <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">
-            <img src={logo} className="App-logo" alt="logo" />
-          </a>
-          <FormControl style={{ width: 500, color: "#f8f8f8" }} >
-            <InputLabel htmlFor="component-error">INPUT TO DOWNLOAD A YOUTUBE VIDEO</InputLabel>
-            <Input
-              onKeyPress={this.onEnter}
-              id="component-error"
-              value={this.state.videoID}
-              onChange={this.handleChange}
-              placeholder="example: https://www.youtube.com/watch?v=0LHxvxdRnYc"
-              aria-describedby="component-error-text"
-            />
-          </FormControl>
-          <FormControl style={{ width: 500, color: "#f8f8f8" }} >
-            <InputLabel htmlFor="component-error">Folder Name (Required!)</InputLabel>
-            <Input
-              onKeyPress={this.onEnter}
-              id="component-name-error"
-              value={this.state.folderName}
-              onChange={this.handlenNameChange}
-              placeholder="Give your video a name"
-              aria-describedby="component-name-text"
-            />
-            In iOS choose a folder starting from <b>/Users/yourusername/desiredFolderURI</b>
-          </FormControl>
-          <FormHelperText
-            style={{
-              color: "red",
-              fontWeight: 700,
-              fontSize: 22
-            }}
-          >
-            {this.state.error}
-          </FormHelperText>
+          if (folderName.length > 0) openFolder();
+          else
+            setError({ code: "", message: "Can't open folder, no folder specified!" })
 
-
-        </header>
-      </div>
-    );
+          resetError();
+          setIsDownloading(false);
+        }
+      })
+      .catch((error) => {
+        setError({ code: "network-error", message: "No Network or Server is Disconnected" })
+        resetError();
+        console.log("Catch-Error:\n", error);
+        setIsDownloading(false);
+      });
   }
+
+  const getVideoID = (url: string) => {
+    return url.replace("watch?v=", "embed/");
+  }
+
+  const resetFolderName = () => {
+    setFolderName("");
+    localStorage.removeItem("getvideo-foldername");
+  };
+
+  const toggleShowVideoID = () => {
+    setShowVideo(!showVideo);
+  }
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        { isDownloading && "Download Started"}
+        {videoID.length === 0
+          ? (
+            <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">
+              <img src={logo} className="App-logo" alt="logo" />
+            </a>
+          )
+          : <iframe src={getVideoID(videoID)} className="video-styles" title="selected-video" />
+        }
+
+        {showVideo && videoID.length > 0
+          ? <button onClick={toggleShowVideoID} className="resetVideoID" title={folderName}>Show Video URL</button>
+          : (
+            <>
+              <FormControl style={{ width: 500, color: "#f8f8f8" }} >
+                <InputLabel htmlFor="component-error">INPUT TO DOWNLOAD A YOUTUBE VIDEO</InputLabel>
+                <Input
+                  onKeyPress={onEnter}
+                  id="component-error"
+                  value={videoID}
+                  onChange={handleChange}
+                  placeholder="example: https://www.youtube.com/watch?v=0LHxvxdRnYc"
+                  aria-describedby="component-error-text"
+                />
+              </FormControl>
+              {
+                videoID.length > 0 &&
+                <button onClick={toggleShowVideoID} className="resetVideoID-side" title={folderName}>X</button>
+              }
+            </>
+          )
+        }
+        {
+          videoID.length > 0 && <button onClick={download} className="resetVideoID" title={folderName}>Download Video</button>
+        }
+        {folderName.length > 0
+          ? <button onClick={resetFolderName} className="reset-video-folder-name" title={folderName}>Change Download Folder</button>
+          : (
+            <FormControl style={{ width: 500, color: "#f8f8f8" }} >
+              <InputLabel htmlFor="component-error">Folder Name (Required!)</InputLabel>
+              <Input
+                onKeyPress={onEnter}
+                id="component-name-error"
+                value={folderName}
+                onChange={handlenNameChange}
+                placeholder="Give your video a name"
+                aria-describedby="component-name-text"
+              />
+              In iOS choose a folder starting from <b>/Users/yourusername/desiredFolderURI</b>
+            </FormControl>
+          )
+        }
+        <FormHelperText
+          style={{
+            color: "red",
+            fontWeight: 700,
+            fontSize: 22
+          }}
+        >
+          {error.message}
+        </FormHelperText>
+        {hasVideo &&
+          <>
+            <button onClick={openFolder} className="open-folder">Open Folder</button>
+          </>
+        }
+      </header>
+    </div>
+  );
+
 }
 
-export default App;
+export default GetVideo;
