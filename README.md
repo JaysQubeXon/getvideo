@@ -31,4 +31,6 @@ This project is open sourced and does not have a license for use. Enjoy!
 # TODOS
 
  - [ ] Add quality selection
- - [ ] Add Audio or video Only
+ - [x] Add Audio or video Only
+
+https://www.youtube.com/watch?v=hICIjwaN3VM
