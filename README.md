@@ -27,3 +27,8 @@ An optional **makefile** can be placed in a directory of your choice and the pro
 In case the port is already in use. The **makefile** has a port kill switch using command: `make killit`. 
 
 This project is open sourced and does not have a license for use. Enjoy!
+
+# TODOS
+
+ - [] Add quanlity selection
+ - [] Add Audio or video Only
