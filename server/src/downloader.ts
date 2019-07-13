@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { ExecFileOptions, execSync } from "child_process";
 
-const youtubedl = require("@microlink/youtube-dl");
+import { ytdl } from "@microlink/youtube-dl";
 
 type DownloadResponse = {
   body: {
@@ -28,7 +28,7 @@ const renameFile = (oldPath: string, newPath: string) => {
   console.log("starting to rename:", oldPath);
   console.log("Rename to:", newPath);
   try {
-    fs.renameSync("~"+oldPath, "~"+newPath);
+    fs.renameSync("~" + oldPath, "~" + newPath);
   } catch (err) {
     console.log(err);
   }
@@ -65,7 +65,7 @@ export function downloader(req: DownloadResponse, res: any) {
 
   console.log("Your Download will be placed in \n", folderName);
 
-  const ytFn = function execYTDL(err: any, output: string[]) {
+  const ytFn = function execYTDL(err: any, output: any) {
     "use strict";
     if (err) {
       throw err;
@@ -126,5 +126,5 @@ export function downloader(req: DownloadResponse, res: any) {
     }
   };
 
-  youtubedl.exec(videoURL, ["-f", type], option, ytFn);
+  ytdl.exec(videoURL, ["-f", type], option, ytFn);
 }
