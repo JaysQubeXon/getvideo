@@ -6,3 +6,6 @@ port:
 	netstat -vanp tcp | grep ${port}
 killit: port
 	lsof -ti:${port} | xargs kill
+
+killmon:
+	lsof -ti:1717 | xargs kill
