@@ -1,14 +1,15 @@
 import { downloader } from "./downloader";
 import { openFolder } from "./openFolder";
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
+import * as path from "path";
+import * as express from "express";
+import * as cors from "cors";
+
 const port = 1717;
 const app = express();
 
 app.use(cors());
-// app.use(bodyParser.urlencoded());
-app.use(bodyParser.json());
+
+app.use(express.static(path.resolve(__dirname, '../client') ))
 
 app.post("/download", downloader);
 

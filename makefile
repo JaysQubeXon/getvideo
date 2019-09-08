@@ -1,11 +1,16 @@
-port = 3000
+port = 1717
 
-getvideo: downloads
-	cd Developments/getvideo && yarn start
+getvideo: init
+	node ./dist/server/index.js	
 port:
 	netstat -vanp tcp | grep ${port}
 killit: port
 	lsof -ti:${port} | xargs kill
 
 killmon:
-	lsof -ti:1717 | xargs kill
+	lsof -ti:${port} | xargs kill
+
+init:
+	open http://localhost:${port}
+build:
+	yarn build

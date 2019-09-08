@@ -1,15 +1,20 @@
+body {
+  background: #242e3f;
+}
+
 .App {
   text-align: center;
 }
 
 .App-logo {
+  width: 53vmin;
   height: 30vmin;
   pointer-events: none;
   margin-bottom: 30px;
 }
 
 .App-header {
-  background-color: #f8f8f8;
+  background-color: #242e3f;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -34,8 +39,9 @@
 }
 
 .video-styles {
-  width: 40vmin;
+  width: 53vmin;
   height: 30vmin;
+  border: none;
 }
 
 .reset-video-folder-name, .resetVideoID {
@@ -60,4 +66,22 @@
 
 .download-type {
   width: 200px;
+}
+
+.download-input-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.download-folder-input-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.download-folder-input-close {
+  border: none;
+  background: transparent;
+  font-size: 25px;
 }
