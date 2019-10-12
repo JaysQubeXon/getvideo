@@ -24,6 +24,13 @@ interface GetVideoState {
   isDownloading: boolean;
 }
 
+const axios = Axios.create({
+  baseURL: "http://localhost:1717",
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
 const GetVideo = () => {
   const [hasVideo, setHasVideo] = useState(false);
 
@@ -47,11 +54,8 @@ const GetVideo = () => {
   const [state, dispatch] = useReducer((state: GetVideoState, action) => {
     switch (action.type) {
       case "SET_VIDEO":
-        const sanitizeURL = (url: string) => {
-          return url.replace("watch?v=", "embed/");
-        }
         const valid = (/www\.youtube\.com/).test(action.videoID);
-        const videoID = sanitizeURL(action.videoID);
+        const videoID = action.videoID;
         if (valid) {
           return { ...state, videoID, error: { code: "", message: "" } };
         } else {
@@ -98,6 +102,10 @@ const GetVideo = () => {
     return () => { }
   }, []);
 
+  useEffect(() => {
+    console.log("state.videoID", state.videoID);
+  }, [state.videoID])
+
   const resetError = useCallback(() => {
     setTimeout(() => dispatch({ type: "CLEAR_ERRORS" }), 10000);
   }, [dispatch]);
@@ -129,7 +137,7 @@ const GetVideo = () => {
   }
 
   const openFolder = () => {
-    Axios.post("http://localhost:1717/openFolder", { folderName: state.folderName });
+    axios.post("openFolder", { folderName: state.folderName });
   }
 
   const onEnter = (e: any) => {
@@ -163,16 +171,15 @@ const GetVideo = () => {
     }
 
     dispatch({ type: "DOWNLOAD_STARTED" });
-    Axios.post("http://localhost:1717/download",
-      {
-        videoURL: state.videoID,
-        folderName: state.folderName,
-        error: "",
-        options: {
-          renameFileName: fileName ? fileName : "",
-          downloadType: state.downloadType
-        }
-      })
+    axios.post("download", {
+      videoURL: state.videoID,
+      folderName: state.folderName,
+      error: "",
+      options: {
+        renameFileName: fileName ? fileName : "",
+        downloadType: state.downloadType
+      }
+    })
       .then(({ data: { data } }) => {
         console.log(data);
         if (data.success) {

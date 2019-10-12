@@ -1,7 +1,7 @@
 import * as fs from "fs";
-import { ExecFileOptions, execSync } from "child_process";
+import * as express from "express";
 
-import { ytdl } from "@microlink/youtube-dl";
+import { ytdl } from "./youtube-dl";
 
 type DownloadResponse = {
   body: {
@@ -13,8 +13,6 @@ type DownloadResponse = {
     };
   };
 };
-
-const SIX_HOUNDRED_MEGABYTES = 1000 * 1000 * 600;
 
 const deleteFIle = (path: string) => {
   console.log("starting to delete:", path);
@@ -34,19 +32,22 @@ const renameFile = (oldPath: string, newPath: string) => {
   }
 };
 
-export function downloader(req: DownloadResponse, res: any) {
+const chooseType: { [key: string]: string } = {
+  both: "bestvideo[ext=mp4]+bestaudio[ext=m4a]",
+  "audio-only": "bestaudio[ext=m4a]",
+  "video-only": "bestvideo[ext=mp4]"
+};
+
+export const downloader = (req: express.Request, res: express.Response) => {
+  console.log("videoURL:", req.body);
   const {
     body: {
       videoURL,
       folderName,
       options: { downloadType, renameFileName }
     }
-  } = req;
-  let type = "";
-
-  if (downloadType === "both") type = "bestvideo[ext=mp4]+bestaudio[ext=m4a]";
-  if (downloadType === "audio-only") type = "bestaudio[ext=m4a]";
-  if (downloadType === "video-only") type = "bestvideo[ext=mp4]";
+  }: DownloadResponse = req;
+  const type: string = chooseType[downloadType];
 
   console.log("Download Type:", type);
 
@@ -57,22 +58,20 @@ export function downloader(req: DownloadResponse, res: any) {
     return;
   }
 
-  const option = {
-    cwd: folderName,
-    // encoding: "buffer",
-    maxBuffer: SIX_HOUNDRED_MEGABYTES
-  } as ExecFileOptions;
+  const option: any = { cwd: folderName };
 
   console.log("Your Download will be placed in \n", folderName);
 
-  const ytFn = function execYTDL(err: any, output: any) {
-    "use strict";
+  function execYTDL(err: any, output: any) {
     if (err) {
+      console.log("error here");
       throw err;
     }
     console.log(output.join("\n"));
 
-    if (output.length > 0) {
+    /**
+     * 
+     * if (output.length > 0) {
       if (renameFileName && renameFileName.length > 0) {
         console.log("Selected rename for file:", renameFileName);
         let name = "";
@@ -124,7 +123,13 @@ export function downloader(req: DownloadResponse, res: any) {
       res.json({ data: { success: true } });
       console.log("\n");
     }
-  };
+     */
+  }
 
-  ytdl.exec(videoURL, ["-f", type], option, ytFn);
-}
+  // return;
+  try {
+    ytdl.exec(videoURL, ["-f", type], option, execYTDL);
+  } catch (error) {
+    console.log("EXEC ERROR:", error);
+  }
+};

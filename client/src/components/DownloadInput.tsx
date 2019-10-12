@@ -19,11 +19,12 @@ interface DownloadInputProps {
 const DownloadInput: FC<DownloadInputProps> = ({ videoID, showVideo, folderName, ...actions }, ref) => {
   const { onEnter, handleChange, download } = actions;
   const styles = {
-    label: { color: "white" },
+    label: { color: "white", marginTop: 2 },
     input: {
       color: "white",
       backgroundColor: "#243e3f",
-      marginBottom: 10
+      marginBottom: 10,
+      height: 30
     }
   };
   const downloadIconFill = videoID.length > 0 ? "green" : "gray"
@@ -34,7 +35,7 @@ const DownloadInput: FC<DownloadInputProps> = ({ videoID, showVideo, folderName,
           htmlFor="component-error"
           focused={true}
           variant="filled"
-          style={styles.label}>Download URL</InputLabel>
+          style={styles.label}>INPUT DOWNLOAD URL</InputLabel>
         <Input
           value={videoID}
           id="component-error"

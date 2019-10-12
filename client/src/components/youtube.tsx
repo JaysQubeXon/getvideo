@@ -6,6 +6,9 @@ interface YoutubePlayerProps {
 }
 
 const YoutubePlayer: FC<YoutubePlayerProps> = ({ id }) => {
+  const sanitizeURL = (url: string) => {
+    return url.replace("watch?v=", "embed/");
+  }
   return (
     <>
       {
@@ -15,12 +18,10 @@ const YoutubePlayer: FC<YoutubePlayerProps> = ({ id }) => {
               <img src={logo} className="App-logo" alt="logo" />
             </a>
           )
-          : <iframe src={id} className="video-styles" title="selected-video" />
+          : <iframe src={sanitizeURL(id)} className="video-styles" title="selected-video" />
       }
     </>
   )
 }
-
-
 
 export default YoutubePlayer;
