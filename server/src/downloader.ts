@@ -1,7 +1,7 @@
 import * as fs from "fs";
+import * as path from "path";
 import * as express from "express";
-
-import { ytdl } from "./youtube-dl";
+import { spawn, exec } from "child_process";
 
 type DownloadResponse = {
   body: {
@@ -22,16 +22,6 @@ const deleteFIle = (path: string) => {
   });
 };
 
-const renameFile = (oldPath: string, newPath: string) => {
-  console.log("starting to rename:", oldPath);
-  console.log("Rename to:", newPath);
-  try {
-    fs.renameSync("~" + oldPath, "~" + newPath);
-  } catch (err) {
-    console.log(err);
-  }
-};
-
 const chooseType: { [key: string]: string } = {
   both: "bestvideo[ext=mp4]+bestaudio[ext=m4a]",
   "audio-only": "bestaudio[ext=m4a]",
@@ -47,7 +37,8 @@ export const downloader = (req: express.Request, res: express.Response) => {
       options: { downloadType, renameFileName }
     }
   }: DownloadResponse = req;
-  const type: string = chooseType[downloadType];
+
+  const type: string[] = ["-f", chooseType[downloadType.toLowerCase()]];
 
   console.log("Download Type:", type);
 
@@ -58,78 +49,31 @@ export const downloader = (req: express.Request, res: express.Response) => {
     return;
   }
 
-  const option: any = { cwd: folderName };
-
   console.log("Your Download will be placed in \n", folderName);
 
-  function execYTDL(err: any, output: any) {
-    if (err) {
-      console.log("error here");
-      throw err;
-    }
-    console.log(output.join("\n"));
+  const downloadDestination = (path: string) =>
+    `${folderName}/${path ? `${path}/%(title)s.%(ext)s` : `%(title)s.%(ext)s`}`;
 
-    /**
-     * 
-     * if (output.length > 0) {
-      if (renameFileName && renameFileName.length > 0) {
-        console.log("Selected rename for file:", renameFileName);
-        let name = "";
-        for (let i = 0; i < output.length; i++) {
-          if (/has already been downloaded/.test(output[i])) {
-            break;
-          }
-
-          let filename = /mp4|m4a/.test(output[i]);
-
-          if (filename) {
-            let part = output[i].split(": ");
-
-            // part[0] = `[download] Destination: `
-            // part[1] = filename
-            let noExt = part[1].split(".")[0];
-            console.log("what is noExt:", noExt);
-            // file extention removed and only name added.
-            name = noExt;
-            break;
-          } else {
-            continue;
-          }
-        }
-        let o = folderName + `/${name}`;
-        let n = folderName + `/${renameFileName}`;
-
-        console.log("\nwhat is old filename:", o);
-        console.log("what is new filename:", n);
-        console.log("\n");
-
-        const t = 1000 * 10;
-        if (downloadType === "both") {
-          console.log(downloadType);
-          setTimeout(() => {
-            renameFile(`${o}.mp4`, `${n}.mp4`);
-            renameFile(`${o}.m4a`, `${n}.m4a`);
-          }, t);
-        }
-        if (downloadType === "video-only") {
-          console.log(downloadType);
-          setTimeout(() => renameFile(`${o}.mp4`, `${n}.mp4`), t);
-        }
-        if (downloadType === "audio-only") {
-          console.log(downloadType);
-          setTimeout(() => renameFile(`${o}.m4a`, `${n}.m4a`), t);
-        }
-      }
-      res.json({ data: { success: true } });
-      console.log("\n");
-    }
-     */
-  }
-
-  // return;
+  const spot = downloadDestination(renameFileName);
+  console.log("spot", spot);
   try {
-    ytdl.exec(videoURL, ["-f", type], option, execYTDL);
+    console.log("starting download");
+    if (renameFileName) {
+      const newDir = `${folderName}/${renameFileName}`;
+      console.log("newDir", newDir);
+      spawn("mkdir", ["-p", newDir]);
+    }
+    if (type[1]) {
+      spawn("youtube-dl", [`-o`, spot, videoURL, ...type]);
+    } else {
+      spawn("youtube-dl", [`-o`, spot, videoURL]);
+    }
+    console.log("downloder path",__dirname);
   } catch (error) {
     console.log("EXEC ERROR:", error);
+  } finally {
+    if (fs.existsSync(path.resolve(__dirname, '..', '~'))) {
+      spawn("rm", ["-rf", path.resolve(__dirname, '..', '~')]);
+    }
   }
 };

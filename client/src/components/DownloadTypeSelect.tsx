@@ -6,6 +6,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 
 export enum DownloadType {
+  None = "none",
   Both = "both",
   Video_Only = "Video-Only",
   Audio_Only = "Audio-Only"
@@ -33,8 +34,8 @@ const DownloadTypeSelect: FC<DownloadTypeSelectProps> = ({ type, ...actions }) =
           name: "download-type",
           id: 'download-type',
         }}
-      >
-        <MenuItem value={DownloadType.Both}>Audio {`&`} Video</MenuItem>
+      ><MenuItem value={DownloadType.None}>Single File</MenuItem>
+        <MenuItem value={DownloadType.Both}>Separate Audio {`&`} Video</MenuItem>
         <MenuItem value={DownloadType.Video_Only}>Video Only</MenuItem>
         <MenuItem value={DownloadType.Audio_Only}>Audio Only</MenuItem>
       </Select>

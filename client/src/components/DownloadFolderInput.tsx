@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React, { FC, useState } from "react"
 
 import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
@@ -15,14 +15,36 @@ interface DownloadFolderInputProps {
 
 const DownloadFolderInput: FC<DownloadFolderInputProps> = ({ show, toggle, name, ...actions }) => {
   const { onKeyPress, onChange, onClick } = actions;
+  const [marginTop, setMarginTop] = useState(name.length > 0 ? 1 : 7);
   const styles = {
-    label: { color: "white" },
-    input: { color: "white", backgroundColor: "#243e3f" }
+    label: {
+      color: "white",
+      marginTop,
+      height: 30
+    },
+    input: { color: "white", backgroundColor: "#243e3f", paddingLeft: 10, height: 40 }
   };
+
+  const onFocus = () => {
+    setMarginTop(1);
+  }
+  const onBlur = () => {
+    if (name.length > 0) {
+      setMarginTop(1);
+    } else {
+      setMarginTop(7);
+    }
+  }
   return (
     <div className="download-folder-input-container">
       <FormControl style={{ width: 500, color: "#f8f8f8" }} >
-        <InputLabel htmlFor="component-error" style={styles.label}>Folder Name (Required!)</InputLabel>
+        <InputLabel
+          htmlFor="component-error"
+          variant="filled"
+          style={styles.label}
+        >
+          Destination Folder (Required!)
+        </InputLabel>
         <Input
           value={name}
           style={styles.input}
@@ -31,6 +53,8 @@ const DownloadFolderInput: FC<DownloadFolderInputProps> = ({ show, toggle, name,
           id="component-name-error"
           aria-describedby="component-name-text"
           placeholder="Required download folder URI"
+          onFocus={onFocus}
+          onBlur={onBlur}
         />
       </FormControl>
       {show &&

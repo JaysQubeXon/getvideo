@@ -45,11 +45,12 @@ const GetVideo = () => {
     },
     showFolderName: false,
     showVideo: false,
-    downloadType: DownloadType.Both,
+    downloadType: DownloadType.None,
     isDownloading: false
   };
 
   const downloadInputRed = useRef(null);
+  const wavesurferRef = useRef({} as HTMLDivElement);
 
   const [state, dispatch] = useReducer((state: GetVideoState, action) => {
     switch (action.type) {
@@ -122,6 +123,7 @@ const GetVideo = () => {
     let folderName = (event.target as HTMLInputElement).value;
     if (!folderName) {
       dispatch({ type: "ON_ERROR", code: "folder-name-missing", message: "Please provide a folder for downloading content." });
+      dispatch({ type: "SET_FOLDER_NAME", folderName });
       resetError();
       return;
     }
@@ -231,10 +233,11 @@ const GetVideo = () => {
           />
           <YoutubePlayer id={state.videoID} />
         </Suspense>
+        <div ref={wavesurferRef} />
 
         <Suspense fallback={"..loading"}>
           {
-            false && <FileNameInput onEnter={onEnter} value={fileName} onChange={handleFileNameChange} />
+            true && <FileNameInput onEnter={onEnter} value={fileName} onChange={handleFileNameChange} />
           }
           <DownloadFolderInput
             name={state.folderName}

@@ -4,21 +4,26 @@ Youtube video downloader.
 
 Uses youtube-dl and configured to download the highest quality.
 
-Output is two files in a required folder name of your choosing.
+You can select between 4 download types:
+ - `single file`: Downloads best quality in single file
+ - `separate audio & video`: Downloasd audio (m4a) and video (mp4)
+ - `audio only`: Downloads audio in m4a format without video
+ - `video only`: Downloads video in mp4 format without audio
 
-The files outputed are:
- **video only**: `mp4`
- **audio only**: `m4a`
 
-A program such as Adobe Primiere is recommended to recombine the two halves.
+A program such as Adobe Primiere is recommended to recombine the two halves. In a future release, ffmpeg would be required for combining files.
 
 In order to begin the program.
-Please first download the repository by cloning or in zip format.
+Please download the repository by cloning or in zip format.
 Install dependencies:
 
 `yarn install`
 
-Then:
+You will need to install `youtube-dl` on your computer by:
+MacOS: `brew install youtube-dl`
+Windows: [Download link](https://yt-dl.org/latest/youtube-dl.exe)
+
+After both are installed, you can start up the server and UI:
 
 `yarn start`
 
